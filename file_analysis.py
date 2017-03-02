@@ -7,7 +7,7 @@ import csv
 
 try:
 	connection = pm.MongoClient()
-	db = connection.disarm_technoshine # switch to disarm database
+	db = connection.mobicom # switch to mobicom database
 except:
 	print "Cannot connect to the mongo client. Please check the port address"
 

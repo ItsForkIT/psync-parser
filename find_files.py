@@ -9,43 +9,22 @@ import csv
 
 try:
 	connection = pm.MongoClient()
-	db = connection.disarm_technoshine # switch to disarm database
+	db = connection.mobicom # switch to mobicom database
 except:
 	print "Cannot connect to the mongo client. Please check the port address"
 
 
-paths = ["/home/arka/Desktop/Dumps/ex/7031583420/Working",
-		"/home/arka/Desktop/Dumps/ex/7076302126/Working",
-		"/home/arka/Desktop/Dumps/ex/7076525081/Working",
-		"/home/arka/Desktop/Dumps/ex/7076884054/Working",
-		"/home/arka/Desktop/Dumps/ex/7098642908/Working",
-		"/home/arka/Desktop/Dumps/ex/7477666542/Working",
-		"/home/arka/Desktop/Dumps/ex/7478147148/Working",
-		"/home/arka/Desktop/Dumps/ex/7551047169/Working",
-		"/home/arka/Desktop/Dumps/ex/7739924781/Working",
-		"/home/arka/Desktop/Dumps/ex/7785845447/Working",
-		"/home/arka/Desktop/Dumps/ex/8220309989/Working",
-		"/home/arka/Desktop/Dumps/ex/8370840532/Working",
-		"/home/arka/Desktop/Dumps/ex/8423217878/Working",
-		"/home/arka/Desktop/Dumps/ex/8436143487/Working",
-		"/home/arka/Desktop/Dumps/ex/8436145897/Working",
-		"/home/arka/Desktop/Dumps/ex/8537807840/Working",
-		"/home/arka/Desktop/Dumps/ex/8808020941/Working",
-		"/home/arka/Desktop/Dumps/ex/8874705428/Working",
-		"/home/arka/Desktop/Dumps/ex/8879716459/Working",
-		"/home/arka/Desktop/Dumps/ex/9433075181/Working",
-		"/home/arka/Desktop/Dumps/ex/9434820751/Working",
-		"/home/arka/Desktop/Dumps/ex/9534490018/Working",
-		"/home/arka/Desktop/Dumps/ex/9563971757/Working",
-		"/home/arka/Desktop/Dumps/ex/9563972030/Working",
-		"/home/arka/Desktop/Dumps/ex/9598453635/Working",
-		"/home/arka/Desktop/Dumps/ex/9635460583/Working",
-		"/home/arka/Desktop/Dumps/ex/9674967768/Working",
-		"/home/arka/Desktop/Dumps/ex/9713474997/Working",
-		"/home/arka/Desktop/Dumps/ex/9830505305/Working",
-		"/home/arka/Desktop/Dumps/ex/9851271032/Working",
-		"/home/arka/Desktop/Dumps/ex/9977991907/Working"
-		]
+"""
+Add all Working Directory in paths
+"""
+paths = []
+for root, dirs, files in os.walk('./Dump/'):
+	for name in dirs:
+		path = os.path.join(root, name)
+		# print path
+		if path.endswith('Working'):
+			paths.append(path)
+
 
 """
 Keep a map of the working directory of each node to its node name

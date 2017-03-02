@@ -29,7 +29,7 @@ def haversine(lon1, lat1, lon2, lat2):
 
 try:
 	connection = pm.MongoClient()
-	db = connection.disarm_technoshine # switch to disarm database
+	db = connection.mobicom # switch to mobicom database
 except:
 	print "Cannot connect to the mongo client. Please check the port address"
 

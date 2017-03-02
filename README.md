@@ -4,8 +4,9 @@ These are the scripts for parsing pSync log files. Current branch parses the log
 
 ## Requirements
 
-Download the logs and keep them in same directory as the scripts and change input to scripts accordingly(needs improvement)
-MongoDB is used as datatbase. 
+Create a directory called `Dump` at the root of project.
+Collect dumps(the whole DMS folder) and keep them in `Dump` directory.
+`MongoDB` is used as datatbase. `pymongo` is used as a dependency.
 
 ## Steps to run 
 

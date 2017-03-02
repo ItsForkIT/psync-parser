@@ -8,7 +8,7 @@ import time
 
 try:
 	connection = pm.MongoClient()
-	db = connection.disarm_technoshine # switch to disarm database
+	db = connection.mobicom # switch to mobicom database
 except:
 	print "Cannot connect to the mongo client. Please check the port address"
 
@@ -143,38 +143,14 @@ def analyse_file(file_path, path_to_name):
 			except:
 				print "ERROR ==== CHECK "
 
-
-paths = ["/home/arka/Desktop/Dumps/ex/7031583420",
-		"/home/arka/Desktop/Dumps/ex/7076302126",
-		"/home/arka/Desktop/Dumps/ex/7076525081",
-		"/home/arka/Desktop/Dumps/ex/7076884054",
-		"/home/arka/Desktop/Dumps/ex/7098642908",
-		"/home/arka/Desktop/Dumps/ex/7477666542",
-		"/home/arka/Desktop/Dumps/ex/7478147148",
-		"/home/arka/Desktop/Dumps/ex/7551047169",
-		"/home/arka/Desktop/Dumps/ex/7739924781",
-		"/home/arka/Desktop/Dumps/ex/7785845447",
-		"/home/arka/Desktop/Dumps/ex/8220309989",
-		"/home/arka/Desktop/Dumps/ex/8370840532",
-		"/home/arka/Desktop/Dumps/ex/8423217878",
-		"/home/arka/Desktop/Dumps/ex/8436143487",
-		"/home/arka/Desktop/Dumps/ex/8436145897",
-		"/home/arka/Desktop/Dumps/ex/8537807840",
-		"/home/arka/Desktop/Dumps/ex/8808020941",
-		"/home/arka/Desktop/Dumps/ex/8874705428",
-		"/home/arka/Desktop/Dumps/ex/8879716459",
-		"/home/arka/Desktop/Dumps/ex/9433075181",
-		"/home/arka/Desktop/Dumps/ex/9434820751",
-		"/home/arka/Desktop/Dumps/ex/9534490018",
-		"/home/arka/Desktop/Dumps/ex/9563971757",
-		"/home/arka/Desktop/Dumps/ex/9563972030",
-		"/home/arka/Desktop/Dumps/ex/9598453635",
-		"/home/arka/Desktop/Dumps/ex/9635460583",
-		"/home/arka/Desktop/Dumps/ex/9674967768",
-		"/home/arka/Desktop/Dumps/ex/9713474997",
-		"/home/arka/Desktop/Dumps/ex/9830505305",
-		"/home/arka/Desktop/Dumps/ex/9851271032",
-		"/home/arka/Desktop/Dumps/ex/9977991907"]
+"""
+Add paths to node dumps 
+"""
+paths = []
+for name in os.listdir('./Dump/'):
+	if os.path.isdir(os.path.join('./Dump/', name)):
+		name = (os.path.join('./Dump/', name))
+		paths.append(name)
 
 # map the names of the nodes corresponding to the file paths
 path_to_name = {}
