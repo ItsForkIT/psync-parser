@@ -1,6 +1,6 @@
 # psync-parser
 
-These are the scripts for parsing pSync log files. Current branch parses the logs from the Kandi drills. 
+These are the scripts for parsing pSync log files. Current branch parses the logs from the Mobicom tests 
 
 ## Requirements
 
@@ -9,7 +9,7 @@ MongoDB is used as datatbase.
 
 ## Steps to run 
 
-1. Run `find_files.py`, `psync_analysis.py`, `gps_analysis.py`, `file_analysis.py` and `analysis.py` in order. 
+1. Run with : `make` 
 
 ## Output
 
