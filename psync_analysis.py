@@ -137,11 +137,11 @@ def analyse_file(file_path, path_to_name):
 				new_node[p]["time_taken"] = node[p + "_psyncLog"]["time_taken"]
 				new_node[p]["end_byte"] = node[p + "_psyncLog"]["end_byte"]
 				# db.files.update_one({"NAME":name},{"$set":node})
-				print new_node
+				# print new_node
 				db.files.replace_one({"NAME":name},new_node)
-				print "Succesful Updation"
+				# print "Succesful Updation"
 			except:
-				print "ERROR ==== CHECK "
+				print "ERROR ==== CHECK  for ", name
 
 """
 Add paths to node dumps 
@@ -155,14 +155,11 @@ for name in os.listdir('./Dump/'):
 # map the names of the nodes corresponding to the file paths
 path_to_name = {}
 for path in paths:
-	if path[:4]=="./DB":
-		path_to_name[path] = "DB"
-	elif path[:4]=="./DM":
-		path_to_name[path] = "DM"
-	else:
-		text_file = open(path + "/source.txt","r")
-		path_to_name[path] = text_file.read()
-		#print path_to_name
+	# print path
+	index = path.rfind('/')
+	new_path = path[index + 1:]	
+	path_to_name[path] = new_path
+# print path_to_name
 
 for path in paths:
 	count = 0;

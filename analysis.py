@@ -74,9 +74,6 @@ dist_not_in_DB = [copy.deepcopy(msgs) for k in range(0,15)]
 file_analysis = {}
 source_not_found = 0.0
 
-malfunction_group = ["8906222492", "9674967768", "9433075181", "7031583420", "7076302126",
-					"9830505305", "7551047169", "8906507952", "7876044546", "9598453635", 
-					"7031534911", "9563971757", "7076884054", "9434820751", "7549023798"]
 
 for document in cursor:
 	#print document
@@ -100,18 +97,7 @@ for document in cursor:
 		print dist , ' for ', lat1, ', ', lon1, ' file ', document["NAME"]
 		
 		# check if file has reached destination 
-		if (document["DESTINATION"] == 'defaultMcs' and 'DB' in document and source_size == document["DB"]["size"]):
-			# add file to dist_in_DB
-			dist_in_DB[int(math.floor(dist/50.0))]["num"] += 1
-			dist_in_DB[int(math.floor(dist/50.0))]["cat"][document["MSG_TYPE"]] += 1
-			dist_in_DB[int(math.floor(dist/50.0))]["cat"]["data_" + document["MSG_TYPE"]] += source_size/1000000.0
-			dist_in_DB[int(math.floor(dist/50.0))]["data"] += source_size/1000000.0
-			time1 = document["DB"]["timestamp_stop_download"]
-			end = datetime.datetime.strptime(time1, '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
-			time2 = time_of_creation[:4] + "." + time_of_creation[4:6] + "." + time_of_creation[6:8] + "." + time_of_creation[8:10] + "." + time_of_creation[10:12] + "." + time_of_creation[12:]
-			start = datetime.datetime.strptime(time2, '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
-			dist_in_DB[int(math.floor(dist/50.0))]["latency"] += ((end - start).total_seconds()/60.0)
-		elif (document["DESTINATION"] != 'DB' and document["DESTINATION"] in document and source_size == document[document["DESTINATION"]]["size"]):
+		if (document["DESTINATION"] in document and source_size == document[document["DESTINATION"]]["size"]):
 			# add file to dist_in_DB
 			dist_in_DB[int(math.floor(dist/50.0))]["num"] += 1
 			dist_in_DB[int(math.floor(dist/50.0))]["cat"][document["MSG_TYPE"]] += 1
@@ -122,26 +108,6 @@ for document in cursor:
 			time2 = time_of_creation[:4] + "." + time_of_creation[4:6] + "." + time_of_creation[6:8] + "." + time_of_creation[8:10] + "." + time_of_creation[10:12] + "." + time_of_creation[12:]
 			start = datetime.datetime.strptime(time2, '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
 			dist_in_DB[int(math.floor(dist/50.0))]["latency"] += ((end - start).total_seconds()/60.0)
-		elif (document["DESTINATION"] != 'DB' and document["DESTINATION"] in malfunction_group):
-			added = False
-			for mal_node in malfunction_group:
-				if (mal_node in document and mal_node != document["SOURCE"] and document[mal_node]["size"] == source_size):
-					dist_in_DB[int(math.floor(dist/50.0))]["num"] += 1
-					dist_in_DB[int(math.floor(dist/50.0))]["cat"][document["MSG_TYPE"]] += 1
-					dist_in_DB[int(math.floor(dist/50.0))]["cat"]["data_" + document["MSG_TYPE"]] += source_size/1000000.0
-					dist_in_DB[int(math.floor(dist/50.0))]["data"] += source_size/1000000.0
-					time1 = document[mal_node]["timestamp_stop_download"]
-					end = datetime.datetime.strptime(time1, '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
-					time2 = time_of_creation[:4] + "." + time_of_creation[4:6] + "." + time_of_creation[6:8] + "." + time_of_creation[8:10] + "." + time_of_creation[10:12] + "." + time_of_creation[12:]
-					start = datetime.datetime.strptime(time2, '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
-					dist_in_DB[int(math.floor(dist/50.0))]["latency"] += ((end - start).total_seconds()/60.0)
-					added = True
-			if (added == False):
-				# add file to dist_not_in_DB
-				dist_not_in_DB[int(math.floor(dist/50.0))]["num"] += 1
-				dist_not_in_DB[int(math.floor(dist/50.0))]["cat"][document["MSG_TYPE"]] += 1
-				dist_not_in_DB[int(math.floor(dist/50.0))]["cat"]["data_" + document["MSG_TYPE"]] += source_size/1000000.0
-				dist_not_in_DB[int(math.floor(dist/50.0))]["data"] += source_size/1000000.0
 		else:
 			# add file to dist_not_in_DB
 			dist_not_in_DB[int(math.floor(dist/50.0))]["num"] += 1
@@ -173,15 +139,6 @@ for document in cursor:
 		time = time + nodes_sorted[i]["time_taken"]
 		if(nodes_sorted[i]["node"]==document["DESTINATION"] and nodes_sorted[i]["size"]==source_size):
 			flag = True
-			destination = document["DESTINATION"]
-			break
-		elif (document["DESTINATION"] == 'defaultMcs' and nodes_sorted[i]["node"]=='DB' and nodes_sorted[i]["size"]==source_size):
-			flag = True
-			destination = 'DB'
-			break
-		elif (nodes_sorted[i]["size"]==source_size and nodes_sorted[i]["node"] in malfunction_group and document["DESTINATION"] in malfunction_group):
-			flag = True 
-			destination = nodes_sorted[i]["node"]
 			break
 
 	if flag==True:
@@ -264,7 +221,7 @@ for keys in in_DB:
 	in_DB[keys]["std_deviation"] = in_DB[keys]["std_deviation"]/in_DB[keys]["num"] if (in_DB[keys]["num"] != 0) else 0
 	in_DB[keys]["std_deviation"] = math.sqrt(in_DB[keys]["std_deviation"])
 
-with open('dp_lat.csv', 'wb') as csv_file:
+with open('Results/dp_lat.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	writer.writerow(['File Categories', 'Received Files', 'Received Data', 'Food', 'Food Data', 
 					'Health', 'Health Data', 'Shelter', 'Shelter Data', 'SocialShare', 'SocialShare Data',
@@ -272,7 +229,8 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					'Health', 'Health Data', 'Shelter', 'Shelter Data', 'SocialShare', 'SocialShare Data',
 					'Victim', 'Victim Data', 'Delivery Probability', 'Latency', 'Std Deviation'])
 
-	writer.writerow(['Overall', in_DB["count"]["num"], in_DB["count"]["data"], 
+	if in_DB["count"]["num"] + not_in_DB["count"]["num"] != 0:
+		writer.writerow(['Overall', in_DB["count"]["num"], in_DB["count"]["data"], 
 					in_DB["count"]["cat"]["Food"], in_DB["count"]["cat"]["data_Food"],
 					in_DB["count"]["cat"]["Health"], in_DB["count"]["cat"]["data_Health"],
 					in_DB["count"]["cat"]["Shelter"], in_DB["count"]["cat"]["data_Shelter"],
@@ -290,7 +248,8 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					in_DB["count"]["latency"]/in_DB["count"]["num"] if (in_DB["count"]["num"]!=0) else 0,
 					in_DB["count"]["std_deviation"] ])
 
-	writer.writerow(['SMS', in_DB["SMS"]["num"], in_DB["SMS"]["data"], 
+	if in_DB["SMS"]["num"] + not_in_DB["SMS"]["num"] != 0:
+		writer.writerow(['SMS', in_DB["SMS"]["num"], in_DB["SMS"]["data"], 
 					in_DB["SMS"]["cat"]["Food"], in_DB["SMS"]["cat"]["data_Food"],
 					in_DB["SMS"]["cat"]["Health"], in_DB["SMS"]["cat"]["data_Health"],
 					in_DB["SMS"]["cat"]["Shelter"], in_DB["SMS"]["cat"]["data_Shelter"],
@@ -308,7 +267,8 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					in_DB["SMS"]["latency"]/in_DB["SMS"]["num"] if (in_DB["SMS"]["num"]!=0) else 0,
 					in_DB["SMS"]["std_deviation"] ])
 
-	writer.writerow(['VIDEO', in_DB["VIDEO"]["num"], in_DB["VIDEO"]["data"], 
+	if in_DB["VIDEO"]["num"] + not_in_DB["VIDEO"]["num"] != 0:
+		writer.writerow(['VIDEO', in_DB["VIDEO"]["num"], in_DB["VIDEO"]["data"], 
 					in_DB["VIDEO"]["cat"]["Food"], in_DB["VIDEO"]["cat"]["data_Food"],
 					in_DB["VIDEO"]["cat"]["Health"], in_DB["VIDEO"]["cat"]["data_Health"],
 					in_DB["VIDEO"]["cat"]["Shelter"], in_DB["VIDEO"]["cat"]["data_Shelter"],
@@ -326,7 +286,8 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					in_DB["VIDEO"]["latency"]/in_DB["VIDEO"]["num"] if (in_DB["VIDEO"]["num"]!=0) else 0,
 					in_DB["VIDEO"]["std_deviation"] ])
 
-	writer.writerow(['IMAGE', in_DB["IMAGE"]["num"], in_DB["IMAGE"]["data"], 
+	if in_DB["IMAGE"]["num"] + not_in_DB["IMAGE"]["num"] != 0:
+		writer.writerow(['IMAGE', in_DB["IMAGE"]["num"], in_DB["IMAGE"]["data"], 
 					in_DB["IMAGE"]["cat"]["Food"], in_DB["IMAGE"]["cat"]["data_Food"],
 					in_DB["IMAGE"]["cat"]["Health"], in_DB["IMAGE"]["cat"]["data_Health"],
 					in_DB["IMAGE"]["cat"]["Shelter"], in_DB["IMAGE"]["cat"]["data_Shelter"],
@@ -344,7 +305,8 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					in_DB["IMAGE"]["latency"]/in_DB["IMAGE"]["num"] if (in_DB["IMAGE"]["num"]!=0) else 0,
 					in_DB["IMAGE"]["std_deviation"] ])
 
-	writer.writerow(['TEXT', in_DB["TEXT"]["num"], in_DB["TEXT"]["data"], 
+	if in_DB["TEXT"]["num"] + not_in_DB["TEXT"]["num"] != 0:
+		writer.writerow(['TEXT', in_DB["TEXT"]["num"], in_DB["TEXT"]["data"], 
 					in_DB["TEXT"]["cat"]["Food"], in_DB["TEXT"]["cat"]["data_Food"],
 					in_DB["TEXT"]["cat"]["Health"], in_DB["TEXT"]["cat"]["data_Health"],
 					in_DB["TEXT"]["cat"]["Shelter"], in_DB["TEXT"]["cat"]["data_Shelter"],
@@ -362,7 +324,8 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					in_DB["TEXT"]["latency"]/in_DB["TEXT"]["num"] if (in_DB["TEXT"]["num"]!=0) else 0,
 					in_DB["TEXT"]["std_deviation"] ])
 
-	writer.writerow(['RECORDING', in_DB["RECORDING"]["num"], in_DB["RECORDING"]["data"], 
+	if in_DB["RECORDING"]["num"] + not_in_DB["RECORDING"]["num"] != 0:
+		writer.writerow(['RECORDING', in_DB["RECORDING"]["num"], in_DB["RECORDING"]["data"], 
 					in_DB["RECORDING"]["cat"]["Food"], in_DB["RECORDING"]["cat"]["data_Food"],
 					in_DB["RECORDING"]["cat"]["Health"], in_DB["RECORDING"]["cat"]["data_Health"],
 					in_DB["RECORDING"]["cat"]["Shelter"], in_DB["RECORDING"]["cat"]["data_Shelter"],
@@ -380,7 +343,7 @@ with open('dp_lat.csv', 'wb') as csv_file:
 					in_DB["RECORDING"]["latency"]/in_DB["RECORDING"]["num"] if (in_DB["RECORDING"]["num"]!=0) else 0,
 					in_DB["RECORDING"]["std_deviation"] ])
 
-with open('dist.csv', 'wb') as csv_file:
+with open('Results/dist.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0, len(dist_in_DB)):
 		writer.writerow([i, dist_in_DB[i]["num"], dist_in_DB[i]["data"], 
@@ -393,7 +356,7 @@ with open('dist.csv', 'wb') as csv_file:
 			dist_in_DB[i]["latency"]/dist_in_DB[i]["num"] if (dist_in_DB[i]["num"]!=0) else 0
 			])
 
-with open('dist_not.csv', 'wb') as csv_file:
+with open('Results/dist_not.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0, len(dist_not_in_DB)):
 		writer.writerow([i, dist_not_in_DB[i]["num"], dist_not_in_DB[i]["data"], 
@@ -420,7 +383,7 @@ for i in range(0,len(time_required["total"])):
 	delivery_wrt_time.insert(i,(i+1.0)/total_files * 100.0)
 # print delivery_wrt_time
 
-with open('total.csv', 'wb') as csv_file:
+with open('Results/total.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0,len(time_required["total"])):
 		writer.writerow([time_required["total"][i],delivery_wrt_time[i]])
@@ -431,7 +394,7 @@ for i in range(0,len(time_required["SMS"])):
 	delivery_wrt_time.insert(i,(i+1.0)/total_files * 100.0)
 # print delivery_wrt_time
 
-with open('sms.csv', 'wb') as csv_file:
+with open('Results/sms.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0,len(time_required["SMS"])):
 		writer.writerow([time_required["SMS"][i],delivery_wrt_time[i]])
@@ -442,7 +405,7 @@ for i in range(0,len(time_required["VIDEO"])):
 	delivery_wrt_time.insert(i,(i+1.0)/total_files * 100.0)
 # print delivery_wrt_time
 
-with open('video.csv', 'wb') as csv_file:
+with open('Results/video.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0,len(time_required["VIDEO"])):
 		writer.writerow([time_required["VIDEO"][i],delivery_wrt_time[i]])
@@ -453,7 +416,7 @@ for i in range(0,len(time_required["IMAGE"])):
 	delivery_wrt_time.insert(i,(i+1.0)/total_files * 100.0)
 # print delivery_wrt_time
 
-with open('image.csv', 'wb') as csv_file:
+with open('Results/image.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0,len(time_required["IMAGE"])):
 		writer.writerow([time_required["IMAGE"][i],delivery_wrt_time[i]])
@@ -464,7 +427,7 @@ for i in range(0,len(time_required["TEXT"])):
 	delivery_wrt_time.insert(i,(i+1.0)/total_files * 100.0)
 # print delivery_wrt_time
 
-with open('text.csv', 'wb') as csv_file:
+with open('Results/text.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0,len(time_required["TEXT"])):
 		writer.writerow([time_required["TEXT"][i],delivery_wrt_time[i]])
@@ -475,7 +438,7 @@ for i in range(0,len(time_required["RECORDING"])):
 	delivery_wrt_time.insert(i,(i+1.0)/total_files * 100.0)
 # print delivery_wrt_time
 
-with open('recording.csv', 'wb') as csv_file:
+with open('Results/recording.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	for i in range(0,len(time_required["RECORDING"])):
 		writer.writerow([time_required["RECORDING"][i],delivery_wrt_time[i]])

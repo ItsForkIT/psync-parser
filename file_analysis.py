@@ -40,19 +40,7 @@ for document in cursor:
 	else:
 		allFiles[count]["SIZE"] = -99
 
-	if (document["DESTINATION"] == 'defaultMcs' and 'DB' in document and document['DB']["size"] == allFiles[count]["SIZE"] ):
-		allFiles[count]["DEST_REACHED"] = 'YES'
-		allFiles[count]["DEST_SIZE"] = document['DB']["size"]
-		allFiles[count]["DEST_REACH_TIME"] = document['DB']["timestamp_stop_download"]
-		if ("LAT_stop_download" in document['DB'] ):
-			allFiles[count]["DEST_LAT"] = document['DB']["LAT_stop_download"]
-			allFiles[count]["DEST_LON"] = document['DB']["LON_stop_download"]
-		else:
-			allFiles[count]["DEST_LAT"] = "Not Available"
-			allFiles[count]["DEST_LON"] = "Not Available"
-		associated_nodes.remove("DB")
-
-	elif (document["DESTINATION"] != 'defaultMcs' and document["DESTINATION"] in document and document[document["DESTINATION"]]["size"] == allFiles[count]["SIZE"] ):
+	if (document["DESTINATION"] in document and document[document["DESTINATION"]]["size"] == allFiles[count]["SIZE"] ):
 		allFiles[count]["DEST_REACHED"] = 'YES'
 		allFiles[count]["DEST_SIZE"] = document[document["DESTINATION"]]["size"]
 		allFiles[count]["DEST_REACH_TIME"] = document[document["DESTINATION"]]["timestamp_stop_download"]
@@ -64,19 +52,7 @@ for document in cursor:
 			allFiles[count]["DEST_LON"] = "Not Available"
 		associated_nodes.remove(document["DESTINATION"])
 
-	elif (document["DESTINATION"] == 'defaultMcs' and 'DB' in document ):
-		allFiles[count]["DEST_REACHED"] = 'PARTIAL'
-		allFiles[count]["DEST_SIZE"] = document['DB']["size"]
-		allFiles[count]["DEST_REACH_TIME"] = document['DB']["timestamp_stop_download"]
-		if ("LAT_stop_download" in document['DB'] ):
-			allFiles[count]["DEST_LAT"] = document['DB']["LAT_stop_download"]
-			allFiles[count]["DEST_LON"] = document['DB']["LON_stop_download"]
-		else:
-			allFiles[count]["DEST_LAT"] = "Not Available"
-			allFiles[count]["DEST_LON"] = "Not Available"
-		associated_nodes.remove("DB")
-
-	elif (document["DESTINATION"] != 'defaultMcs' and document["DESTINATION"] in document):
+	elif (document["DESTINATION"] in document):
 		allFiles[count]["DEST_REACHED"] = 'PARTIAL'
 		allFiles[count]["DEST_SIZE"] = document[document["DESTINATION"]]["size"]
 		allFiles[count]["DEST_REACH_TIME"] = document[document["DESTINATION"]]["timestamp_stop_download"]
@@ -98,7 +74,7 @@ for document in cursor:
 	allFiles[count]["ASSOCIATED_NODES"] = associated_nodes
 	count = count + 1
 
-with open('files.csv', 'wb') as csv_file:
+with open('Results/files.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	writer.writerow(['Name', 'Type', 'Msg Type', 'Source', 'Creation Date', 'Creation Time', 'Latitude', 
 		'Longitude', 'Size', 'Destination Reached Status', 'Destination', 'Intermediate Node Count', 'Intermediate Nodes',

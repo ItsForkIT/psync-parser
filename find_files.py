@@ -22,7 +22,7 @@ for root, dirs, files in os.walk('./Dump/'):
 	for name in dirs:
 		path = os.path.join(root, name)
 		# print path
-		if path.endswith('Working'):
+		if path.endswith('Working') or path.endswith('sync'):
 			paths.append(path)
 
 
@@ -33,10 +33,10 @@ path_to_name = {}
 for path in paths:
 	index = path.rfind('/')
 	new_path = path[:index]
-	print new_path
-	text_file = open(new_path + "/source.txt","r")
-	path_to_name[path] = text_file.read()
-	print path_to_name
+	index = new_path.rfind('/')
+	new_path = new_path[index + 1:]	
+	path_to_name[path] = new_path
+	# print path_to_name
 #print path_to_name
 
 """
@@ -47,11 +47,11 @@ Also keep details of that file present in every node
 for path in paths:
 	for root, dirs, files in os.walk(path):
 		for file in files:
-			if file.endswith(".txt") or file.endswith(".3gp") or file.endswith(".jpg"):
+			if file.endswith(".txt") or file.endswith(".3gp") or file.endswith(".jpg") or file.endswith(".mp4"):
 				# get all file info and put it in a db
 				cursor = db.files.find({"NAME":file})
 				if(cursor.count()>0):
-					print "Updating for node ", path
+					# print "Updating for node ", path
 					
 					fileinfo = cursor[0]
 					p = path_to_name[path]
@@ -62,8 +62,8 @@ for path in paths:
 					node["ASSOCIATED_NODES"] = associated_nodes
 					node[p] = {}
 					node[p]["size"] = statinfo.st_size
-					node[p]["date_created"] = time.ctime(statinfo.st_ctime)
-					node[p]["date_modified"] = time.ctime(statinfo.st_mtime)
+					# node[p]["date_created"] = time.ctime(statinfo.st_ctime)
+					# node[p]["date_modified"] = time.ctime(statinfo.st_mtime)
 					db.files.update_one({"NAME":cursor[0]["NAME"]},{"$set":node})
 				else:
 					statinfo = os.stat(path + "/" + file)
@@ -93,8 +93,8 @@ for path in paths:
 					fileinfo["ASSOCIATED_NODES"] = associated_nodes
 					fileinfo[p] = {}
 					fileinfo[p]["size"] = statinfo.st_size
-					fileinfo[p]["date_created"] = time.ctime(statinfo.st_ctime)
-					fileinfo[p]["date_modified"] = time.ctime(statinfo.st_mtime)
+					# fileinfo[p]["date_created"] = time.ctime(statinfo.st_ctime)
+					# fileinfo[p]["date_modified"] = time.ctime(statinfo.st_mtime)
 					if file.startswith("SMS"):
 						fileinfo["type"] = "SMS"
 					elif file.startswith("VID"):
@@ -109,4 +109,4 @@ for path in paths:
 						fileinfo["type"] = "GPS TRAIL"
 					
 					db.files.insert_one(fileinfo)
-					print "File inserted in db"
+					# print "File inserted in db"

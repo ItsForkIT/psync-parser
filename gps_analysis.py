@@ -21,7 +21,7 @@ for root, dirs, files in os.walk('./Dump/'):
 	for name in dirs:
 		path = os.path.join(root, name)
 		# print path
-		if path.endswith('Working'):
+		if path.endswith('Working') or path.endswith('sync'):
 			paths.append(path)
 
 """
@@ -29,16 +29,14 @@ Keep a map of the working directory of each node to its node name
 """
 path_to_name = {}
 for path in paths:
-	if path[:4]=="./DB":
-		path_to_name[path] = "DB"
-	elif path[:4]=="./DM":
-		path_to_name[path] = "DM"
-	else:
-		index = path.rfind('/')
-		new_path = path[:index]
-		text_file = open(new_path + "/source.txt","r")
-		path_to_name[path] = text_file.read()
+	index = path.rfind('/')
+	new_path = path[:index]
+	index = new_path.rfind('/')
+	new_path = new_path[index + 1:]	
+	path_to_name[path] = new_path
+	# print path_to_name
 #print path_to_name
+
 
 def analyse_file( file_path, timestamp, node, pass_no):
 	data = [np.array(map(None, line.split(','))) for line in open(file_path)]
@@ -116,4 +114,4 @@ for document in cursor:
 				print "loc not found for ", node, " for file ", document["NAME"], ' timestamp ', document[node]["timestamp_start_download"]
 
 	db.files.update_one({"NAME":document["NAME"]},{"$set":file})
-	print "Updated for ", document["NAME"]
+	# print "Updated for ", document["NAME"]
