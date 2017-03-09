@@ -52,7 +52,7 @@ for document in cursor:
 			allFiles[count]["DEST_LON"] = "Not Available"
 		associated_nodes.remove(document["DESTINATION"])
 
-	elif (document["DESTINATION"] in document):
+	elif (document["DESTINATION"] in document and document[document["DESTINATION"]]["size"] != allFiles[count]["SIZE"]):
 		allFiles[count]["DEST_REACHED"] = 'PARTIAL'
 		allFiles[count]["DEST_SIZE"] = document[document["DESTINATION"]]["size"]
 		allFiles[count]["DEST_REACH_TIME"] = document[document["DESTINATION"]]["timestamp_stop_download"]
@@ -72,18 +72,26 @@ for document in cursor:
 		allFiles[count]["DEST_LON"] = "Not Available"
 
 	allFiles[count]["ASSOCIATED_NODES"] = associated_nodes
+
+	# Calc total sizes of all copies present with associated nodes
+	file_overhead = 0
+	for node in associated_nodes:
+		file_overhead = file_overhead + document[node]["size"]
+
+	allFiles[count]["DATA_OVERHEAD"] = file_overhead/1000000.0 # in MB
 	count = count + 1
 
 with open('Results/files.csv', 'wb') as csv_file:
 	writer = csv.writer(csv_file)
 	writer.writerow(['Name', 'Type', 'Msg Type', 'Source', 'Creation Date', 'Creation Time', 'Latitude', 
 		'Longitude', 'Size', 'Destination Reached Status', 'Destination', 'Intermediate Node Count', 'Intermediate Nodes',
-		'Size at Destination', 'Destination Reach Date', 'Destination Reach Time', 'Destination Latitude', 'Destination Longitude'])
+		'Size at Destination', 'Destination Reach Date', 'Destination Reach Time', 'Destination Latitude', 
+		'Destination Longitude', 'Data Overhead'])
 	for i in range(0, len(allFiles)):
 		writer.writerow( [ allFiles[i]["NAME"], allFiles[i]["TYPE"], allFiles[i]["MSG_TYPE"], allFiles[i]["SOURCE"], 
 			allFiles[i]["DATE_OF_CREATION"][0:4] + '.' + allFiles[i]["DATE_OF_CREATION"][4:6] + '.' + allFiles[i]["DATE_OF_CREATION"][6:8],
 			allFiles[i]["DATE_OF_CREATION"][8:10] + '.' + allFiles[i]["DATE_OF_CREATION"][10:12] + '.' + allFiles[i]["DATE_OF_CREATION"][12:],
-			allFiles[i]["CREATION_LAT"], allFiles[i]["CREATION_LON"], allFiles[i]["SIZE"], allFiles[i]["DEST_REACHED"],
+			allFiles[i]["CREATION_LAT"], allFiles[i]["CREATION_LON"], allFiles[i]["SIZE"]/1000000.0, allFiles[i]["DEST_REACHED"],
 			allFiles[i]["DESTINATION"], len(allFiles[i]["ASSOCIATED_NODES"]), allFiles[i]["ASSOCIATED_NODES"],
-			allFiles[i]["DEST_SIZE"], allFiles[i]["DEST_REACH_TIME"][0:10], allFiles[i]["DEST_REACH_TIME"][11:], allFiles[i]["DEST_LAT"],
-			allFiles[i]["DEST_LON"] ] )
+			allFiles[i]["DEST_SIZE"]/1000000.0, allFiles[i]["DEST_REACH_TIME"][0:10], allFiles[i]["DEST_REACH_TIME"][11:], allFiles[i]["DEST_LAT"],
+			allFiles[i]["DEST_LON"], allFiles[i]["DATA_OVERHEAD"] ] )
