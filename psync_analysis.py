@@ -5,6 +5,8 @@ import os
 import numpy as np 
 import datetime
 import time
+import copy
+import csv
 
 try:
 	connection = pm.MongoClient()
@@ -143,6 +145,104 @@ def analyse_file(file_path, path_to_name):
 			except:
 				print "ERROR ==== CHECK  for ", name
 
+
+def snapshot_working_dir(file_path, path_to_name):
+	"""
+	This method analysis psync log files and creates a 
+	snapshot of the working dir for the node.
+	A snapshot should contain all the informations
+	required to calculate the importance of the 
+	working dir of the node at that instant of time.
+	"""
+
+	index = file_path.rfind('/')
+	path = file_path[:index]
+	node = path_to_name[path]
+
+	data = [np.array(map(None, line.split(','))) for line in open(file_path)]
+
+	files_present = []	# will contain the list of files present in working dir
+	files_completed = []# will contain the list of files completely downloaded from peer
+	file = {}
+	interval = {
+	"number": 0,
+	"start_timestamp": datetime.datetime.strptime(data[0][0], '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1),
+	"end_timestamp": datetime.datetime.strptime(data[0][0], '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1),
+	"file_count": 0, 	# total number of files present in this interval
+	"file_delivered": 0,# total number of files completely delivered in this interval
+	"data": 0.0, 		# data volume 
+	"files": []
+	}
+	intervals = []
+	interval_duration = 5 * 60 # 5 min interval time
+
+	count = 0
+	files_received = 0
+	data_downloaded = 0.0
+	interval_start_time = datetime.datetime.strptime(data[0][0], '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
+	for i in range(1, len(data)):
+		time_now = datetime.datetime.strptime(data[i][0], '%Y.%m.%d.%H.%M.%S') + datetime.timedelta(days=1)
+
+		if data[i][1] == ' START_FILE_DOWNLOAD':
+			filename = data[i][3]
+			if filename not in files_present:
+				files_present.append(filename)
+				file[filename] = data[i][4]
+
+		elif data[i][1] == ' STOP_FILE_DOWNLOAD':
+			filename = data[i][3]
+			if int(data[i][4]) == int(float(data[i][5])):
+				files_completed.append(filename)
+			# update downloaded data 
+			data_downloaded = data_downloaded + (int(data[i][4]) - int(file[filename]))
+			file[filename] = data[i][4]
+
+		if (time_now - interval_start_time).total_seconds() >= interval_duration:
+			#update interval data here
+			current_interval = copy.deepcopy(interval)
+			current_interval["number"] = count + 1
+			current_interval["file_count"] = len(files_present) # this denotes even partial downloads
+			current_interval["file_delivered"] = len(files_completed) # this denotes complete downloads
+			current_interval["data"] = data_downloaded
+			current_interval["files"] = copy.deepcopy(files_completed)
+			current_interval["start_timestamp"] = interval_start_time
+			current_interval["end_timestamp"] = time_now
+			#update interval start time here
+			interval_start_time = time_now
+			count = count + 1
+
+			intervals.append(current_interval)
+
+
+
+	# update last interval here
+	if time_now != interval_start_time:
+		current_interval = copy.deepcopy(interval)
+		current_interval["number"] = count + 1
+		current_interval["file_count"] = len(files_present) # this denotes even partial downloads
+		current_interval["file_delivered"] = len(files_completed) # this denotes complete downloads
+		current_interval["data"] = data_downloaded
+		current_interval["files"] = files_completed
+		current_interval["start_timestamp"] = interval_start_time
+		current_interval["end_timestamp"] = time_now
+		intervals.append(current_interval)
+
+	# write results to a file
+	# print intervals
+	with open('Results/' + node + '_syncHistory.csv', 'wb') as csv_file:
+		writer = csv.writer(csv_file)
+		writer.writerow(['Interval #', 'Start timestamp', 'End Timestamp', 
+			'Total number of files', 'Data volume', 'Complete transfers', 'Completely downloaded files'])
+		for i in range(0,len(intervals)):
+			writer.writerow([
+				intervals[i]["number"], intervals[i]["start_timestamp"], intervals[i]["end_timestamp"],
+				intervals[i]["file_count"], intervals[i]["data"]/1000000.0, intervals[i]["file_delivered"],
+				intervals[i]["files"] 
+				])
+	# print node
+
+
+
 """
 Add paths to node dumps 
 """
@@ -170,5 +270,8 @@ for path in paths:
 				count = count + 1
 				print "================================================================================================"
 				print "-----------------------Analysing ", path, "/", file, "--------------------------------"
-				analyse_file(path + "/" + file, path_to_name)
+				# analyse_file(path + "/" + file, path_to_name)
+				# print path
+				# print file 
+				snapshot_working_dir(path + "/" + file, path_to_name)
 	print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXFound ", count, " log files in ", path, "XXXXXXXXXXXXXXXXXXXXXXXXXX"
