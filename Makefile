@@ -11,6 +11,9 @@ default:
 	@echo "============Analysing Files=============="
 	python file_analysis.py
 	@echo "Finished"
+	@echo "============Cluster Analysis============="
+	python cluster_analysis.py
+	@echo "Finished"
 	@echo "=============Final Analysis=============="
 	python analysis.py
 	@echo "Finished"

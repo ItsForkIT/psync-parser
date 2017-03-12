@@ -270,7 +270,7 @@ for path in paths:
 				count = count + 1
 				print "================================================================================================"
 				print "-----------------------Analysing ", path, "/", file, "--------------------------------"
-				# analyse_file(path + "/" + file, path_to_name)
+				analyse_file(path + "/" + file, path_to_name)
 				# print path
 				# print file 
 				snapshot_working_dir(path + "/" + file, path_to_name)
