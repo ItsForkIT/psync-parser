@@ -47,7 +47,7 @@ Also keep details of that file present in every node
 for path in paths:
 	for root, dirs, files in os.walk(path):
 		for file in files:
-			if file.endswith(".txt") or file.endswith(".3gp") or file.endswith(".jpg") or file.endswith(".mp4"):
+			if file.startswith("IMG") or file.startswith("VID") or file.startswith("SMS") or file.startswith("TXT") or file.startswith("SVG"):
 				# get all file info and put it in a db
 				cursor = db.files.find({"NAME":file})
 				if(cursor.count()>0):
