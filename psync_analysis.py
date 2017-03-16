@@ -7,6 +7,7 @@ import datetime
 import time
 import copy
 import csv
+from math import sqrt
 
 try:
 	connection = pm.MongoClient()
@@ -40,6 +41,7 @@ def analyse_file(file_path, path_to_name):
 	delay = 0
 	file_stack = {}
 	peer_stack = {}
+	connections = []
 	map_id_dbData = {} 				# map file id to data to store in db
 	map_id_name = {} 				# map file id to file name
 	map_id_str={} 					# map file id to start file download time
@@ -59,7 +61,9 @@ def analyse_file(file_path, path_to_name):
 			map_id_dbData[data[i][2]] = node
 
 			if (data[i][3] not in file_stack) :
-				file_stack[data[i][3]] = int(data[i][4])
+				file_stack[data[i][3]] = {}
+				file_stack[data[i][3]]["byte"] = int(data[i][4])
+				file_stack[data[i][3]]["time"] = data[i][0]
 
 		if(msgType[i] == ' STOP_FILE_DOWNLOAD'):
 			map_id_end[data[i][2]] = time[i]
@@ -71,17 +75,22 @@ def analyse_file(file_path, path_to_name):
 			node[p + "_psyncLog"]["end_byte"] = int(data[i][4])
 			map_id_dbData[data[i][2]] = node
 
-			data_downloaded += (int(data[i][4]) - file_stack[data[i][3]])
+			data_downloaded += (int(data[i][4]) - file_stack[data[i][3]]["byte"] )
+
+			connections_time = (datetime.datetime.strptime(data[i][0], '%Y.%m.%d.%H.%M.%S') - 
+			datetime.datetime.strptime(file_stack[data[i][3]]["time"], '%Y.%m.%d.%H.%M.%S')).total_seconds()
+			
+			if connections_time > 0:
+				connections.append( (int(data[i][4]) - file_stack[data[i][3]]["byte"])/connections_time )
 			del(file_stack[ data[i][3] ])
 
 			# calculate delay when file is downloaded completely
 			# delay = time for stop download - time of file creation
-			print int(data[i][4]), int( float(data[i][5])) 
-			if int(data[i][4] == int( float(data[i][5])) ):
+			res = db.files.find_one({'NAME':data[i][3].strip()})
+			if res != None and (int(data[i][4]) == res[res["SOURCE"]]["size"] ):
 				file_creation_time = data[i][3].split('_')[7]
 				delay += ( datetime.datetime.strptime(data[i][0], '%Y.%m.%d.%H.%M.%S') - 
-							datetime.datetime.strptime(file_creation_time, '%Y%m%d%H%M%S') )
-
+							datetime.datetime.strptime(file_creation_time, '%Y%m%d%H%M%S') ).total_seconds()
 
 		if (data[i][1] == ' PEER_DISCOVERED') :
 			# print("+", data[i][2])
@@ -97,7 +106,18 @@ def analyse_file(file_path, path_to_name):
 
 	print " Data downloaded is ", data_downloaded
 	print " Total connection time ", time_total
-	print "Total delay is ", delay
+	print " Total delay is ", delay
+
+	# Find mean and standard deviation
+	if len(connections) > 0 :
+		mean = (sum(connections)*1.0)/len(connections) 
+		print " Mean data downloaded / time over all connections ", mean
+		differences = [x - mean for x in connections]
+    	sq_differences = [d ** 2 for d in differences]
+    	ssd = sum(sq_differences)
+    	variance = ssd / len(connections)
+    	sd = sqrt(variance)
+    	print " Standard deviation over all connections ", sd
 
 	"""
 	print map_id_str
@@ -163,7 +183,8 @@ def analyse_file(file_path, path_to_name):
 		name = name.strip()
 		cursor = db.files.find({"NAME":name})
 		if(cursor.count()<=0):
-			print "NOT FOUND",name
+			# print "NOT FOUND",name
+			name
 		else:
 			try:
 				new_node = {}
@@ -311,5 +332,5 @@ for path in paths:
 				analyse_file(path + "/" + file, path_to_name)
 				# print path
 				# print file 
-				snapshot_working_dir(path + "/" + file, path_to_name)
+				# snapshot_working_dir(path + "/" + file, path_to_name)
 	print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXFound ", count, " log files in ", path, "XXXXXXXXXXXXXXXXXXXXXXXXXX"
