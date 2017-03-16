@@ -35,6 +35,11 @@ def analyse_file(file_path, path_to_name):
 		time.append (delta.total_seconds())
 		msgType.append(data[i][1])
 
+	data_downloaded = 0.0
+	time_total = 0.0
+	delay = 0
+	file_stack = {}
+	peer_stack = {}
 	map_id_dbData = {} 				# map file id to data to store in db
 	map_id_name = {} 				# map file id to file name
 	map_id_str={} 					# map file id to start file download time
@@ -52,6 +57,10 @@ def analyse_file(file_path, path_to_name):
 			node[p + "_psyncLog"]["start_download"] = time[i]
 			node[p + "_psyncLog"]["start_byte"] = int(data[i][4])
 			map_id_dbData[data[i][2]] = node
+
+			if (data[i][3] not in file_stack) :
+				file_stack[data[i][3]] = int(data[i][4])
+
 		if(msgType[i] == ' STOP_FILE_DOWNLOAD'):
 			map_id_end[data[i][2]] = time[i]
 			map_id_ending_byte[data[i][2]]=int(data[i][4])
@@ -61,6 +70,34 @@ def analyse_file(file_path, path_to_name):
 			node[p + "_psyncLog"]["time_taken"] = node[p + "_psyncLog"]["stop_download"] - node[p + "_psyncLog"]["start_download"]
 			node[p + "_psyncLog"]["end_byte"] = int(data[i][4])
 			map_id_dbData[data[i][2]] = node
+
+			data_downloaded += (int(data[i][4]) - file_stack[data[i][3]])
+			del(file_stack[ data[i][3] ])
+
+			# calculate delay when file is downloaded completely
+			# delay = time for stop download - time of file creation
+			print int(data[i][4]), int( float(data[i][5])) 
+			if int(data[i][4] == int( float(data[i][5])) ):
+				file_creation_time = data[i][3].split('_')[7]
+				delay += ( datetime.datetime.strptime(data[i][0], '%Y.%m.%d.%H.%M.%S') - 
+							datetime.datetime.strptime(file_creation_time, '%Y%m%d%H%M%S') )
+
+
+		if (data[i][1] == ' PEER_DISCOVERED') :
+			# print("+", data[i][2])
+			peer_stack[data[i][2]] = data[i][0]
+		elif (data[i][1] == ' PEER_LOST') :
+			# print("-", data[i][2])
+			try :
+				time_total += ( datetime.datetime.strptime(data[i][0], '%Y.%m.%d.%H.%M.%S') - 
+							datetime.datetime.strptime(peer_stack[data[i][2]], '%Y.%m.%d.%H.%M.%S') ).total_seconds()
+				del(peer_stack[data[i][2]])
+			except:
+				pass
+
+	print " Data downloaded is ", data_downloaded
+	print " Total connection time ", time_total
+	print "Total delay is ", delay
 
 	"""
 	print map_id_str
@@ -145,6 +182,7 @@ def analyse_file(file_path, path_to_name):
 			except:
 				print "ERROR ==== CHECK  for ", name
 
+	
 
 def snapshot_working_dir(file_path, path_to_name):
 	"""
